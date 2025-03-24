@@ -1,6 +1,5 @@
-CITATION. cff
 cff-version: 1.2.0
-message: "Please cite it as below."
+message: "If you use these scripts, please cite it as below."
 authors:
 - family-names: "Grasso-Cladera"
   given-names: "Aitana"
@@ -10,4 +9,6 @@ authors:
   orcid: "https://orcid.org/0009-0007-0246-4481"
 title: "Exploring Saccade and Fixation Onset ERPs in the Real World"
 version: 1.0
+doi: 
+date-released:
 url: "https://github.com/AitanaGrasso-Cladera/OsnabrueckPlazaProject"
