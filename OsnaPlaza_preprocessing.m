@@ -8,22 +8,22 @@ clear all; % clear workspace
 clc; % clear command window
 close all; % close plots etc.
 %% What type of ERP you want to compute?
-fixationOnset = 1;
-saccadeOnset = 0;
+fixationOnset = 0;
+saccadeOnset = 1;
 %% Path definition
 desktop = 0;
 laptop = 1;
 
 if desktop == 1
-    dataFolder = [];
-    triggerFolder = [];
-    % addpath('EEGLAB path');
-    workingFolder = [];
+    dataFolder = '/media/agrassoclade/Aitanas_SSD/Osnabruck_Plaza/Data';
+    triggerFolder = '/media/agrassoclade/Aitanas_SSD/Osnabruck_Plaza/triggerFiles';
+    addpath('/media/agrassoclade/Aitanas_SSD/Matlab_Toolboxes/eeglab2025.0.0');
+    workingFolder = '/media/agrassoclade/Aitanas_SSD/Osnabruck_Plaza';
 elseif laptop == 1
-    dataFolder = [];
-    triggerFolder = [];
-    % addpath('EEGLAB path');
-    workingFolder = [];
+    dataFolder = '/Volumes/Aitanas_SSD/Osnabruck_Plaza/Data';
+    triggerFolder = '/Volumes/Aitanas_SSD/Osnabruck_Plaza/triggerFiles';
+    addpath('/Volumes/Aitanas_SSD/Matlab_Toolboxes/eeglab2025.0.0');
+    workingFolder = '/Volumes/Aitanas_SSD/Osnabruck_Plaza';
 end
 %%
 tmp = dir(fullfile(dataFolder));
@@ -44,7 +44,7 @@ end
 clear tmp
 %%
 eeglab
-for sub = 1:length(participants)
+for sub = 1:8%length(participants)
     participantFolder = [dataFolder,filesep,'preproc_',participants(sub).name(1:end-4)];
 
     if ~exist(participantFolder,'dir')
@@ -68,27 +68,47 @@ for sub = 1:length(participants)
     %% Import the trigger file, arrange, filtering 
     EEG = pop_loadset(sprintf('0a_rawChanNames_%s.set',participants(sub).name(1:end-4)),fullfile(participantFolder));
     % Arrange the trigger file
-    data = readtable([triggerFolder,filesep,'rawTriggerFile_',participants(sub).name(1:end-4),'.csv'], 'TextType', 'string'); % Assuming the file has headers
-    % Remove columns with unwanted information
-    columnsToRemoveIndices = 1:6; 
-    data(:, columnsToRemoveIndices) = [];
-    % Save the new trigger file
     if fixationOnset
+        data = readtable([triggerFolder,filesep,'rawTriggerFileFixations_',participants(sub).name(1:end-4),'.csv'], 'TextType', 'string'); % Assuming the file has headers
+        % Remove if there is any nan event
+        nonValidTrial = find(isnan(data.givenDuration));
+        if ~isempty(nonValidTrial)
+            data(nonValidTrial,:) = [];
+        end
+        % Save the clean trigger file
         writetable(data,[triggerFolder,filesep,'clean_',participants(sub).name(1:end-4),'_fixationTriggers.csv']);
-    elseif saccadeOnset
-        writetable(data,[triggerFolder,filesep,'clean_',participants(sub).name(1:end-4),'_saccadeTriggers.csv']);
-    end
-    % Load the trigger file
-    EEG = pop_importevent(EEG,'event',fullfile(triggerFolder,['clean_',participants(sub).name(1:end-4),'_fixationTriggers.csv']),'skipline', 1,'append','no');
+        % Load the trigger file
+        EEG = pop_importevent(EEG,'event',fullfile(triggerFolder,['clean_',participants(sub).name(1:end-4),'_fixationTriggers.csv']),'skipline', 1,'append','no');
 
-    % Loop through each element in the structure array and assign the
-    % corresponding information
-    for i = 1:length(EEG.event)
-        EEG.event(i).latency = EEG.event(i).var1;
-        EEG.event(i).type = EEG.event(i).var2;
+        for i = 1:length(EEG.event)
+            EEG.event(i).latency = EEG.event(i).var1;
+            EEG.event(i).type = EEG.event(i).var2;
+            EEG.event(i).givenDurations = EEG.event(i).var3;
+            EEG.event(i).fixationStart = EEG.event(i).var4;
+        end
+
+        EEG.event = rmfield(EEG.event, {'var1', 'var2','var3','var4'});
+
+    else
+        data = readtable([triggerFolder,filesep,'rawTriggerFileSaccades_',participants(sub).name(1:end-4),'.csv'], 'TextType', 'string'); % Assuming the file has headers
+        % Remove if there is any nan event
+        nonValidTrial = find(isnan(data.givenDuration));
+        if ~isempty(nonValidTrial)
+            data(nonValidTrial,:) = [];
+        end
+        % Save the clean trigger file
+        writetable(data,[triggerFolder,filesep,'clean_',participants(sub).name(1:end-4),'_saccadeTriggers.csv']);
+        % Load the trigger file
+        EEG = pop_importevent(EEG,'event',fullfile(triggerFolder,['clean_',participants(sub).name(1:end-4),'_saccadeTriggers.csv']),'skipline', 1,'append','no');
+        for i = 1:length(EEG.event)
+            EEG.event(i).latency = EEG.event(i).var2;
+            EEG.event(i).type = EEG.event(i).var3;
+            EEG.event(i).saccadeStart = EEG.event(i).var1;
+            EEG.event(i).givanDurations = EEG.event(i).var4;
+        end
+
+        EEG.event = rmfield(EEG.event, {'var1', 'var2','var3','var4'});
     end
-    EEG.event = rmfield(EEG.event, {'var1', 'var2'});
-    
     % Filter the data parameters adapted from Czeszumski, 2023 (Hyperscanning
     % Maastricht)
     low_pass = 128;
@@ -108,11 +128,19 @@ for sub = 1:length(participants)
 
     % Save the data: always add an 'a' behind the number of automated
     EEG = eeg_checkset(EEG);
-    EEG = pop_editset(EEG, 'setname', sprintf('1a_triggersFiltered_%s',participants(sub).name(1:end-4))); 
-    EEG = pop_saveset(EEG, 'filename',sprintf('1a_triggersFiltered_%s',participants(sub).name(1:end-4)),'filepath',fullfile(participantFolder));
+    if fixationOnset
+        EEG = pop_editset(EEG, 'setname', sprintf('1a_triggersFilteredFixation_%s',participants(sub).name(1:end-4)));
+        EEG = pop_saveset(EEG, 'filename',sprintf('1a_triggersFilteredFixation_%s',participants(sub).name(1:end-4)),'filepath',fullfile(participantFolder));
+    else
+        EEG = pop_editset(EEG, 'setname', sprintf('1a_triggersFilteredSaccade_%s',participants(sub).name(1:end-4)));
+        EEG = pop_saveset(EEG, 'filename',sprintf('1a_triggersFilteredSaccade_%s',participants(sub).name(1:end-4)),'filepath',fullfile(participantFolder));
+    end
     %% Channel removal, data cleaning
-    EEG = pop_loadset(sprintf('1a_triggersFiltered_%s.set',participants(sub).name(1:end-4)),fullfile(participantFolder));
-
+    if fixationOnset
+        EEG = pop_loadset(sprintf('1a_triggersFilteredFixation_%s.set',participants(sub).name(1:end-4)),fullfile(participantFolder));
+    else
+        EEG = pop_loadset(sprintf('1a_triggersFilteredSaccade_%s.set',participants(sub).name(1:end-4)),fullfile(participantFolder));
+    end
     full_chanlocs = EEG.chanlocs; % used for data cleaning and interpolation
     EEG.urchanlocs = full_chanlocs;
 
@@ -155,13 +183,22 @@ for sub = 1:length(participants)
 
     % Save the data: always add an 'a' behind the number of automated
     EEG = eeg_checkset(EEG);
-    EEG = pop_editset(EEG, 'setname', sprintf('2a_cleanDataChannels_%s',participants(sub).name(1:end-4))); 
-    EEG = pop_saveset(EEG, 'filename',sprintf('2a_cleanDataChannels_%s',participants(sub).name(1:end-4)),'filepath',fullfile(participantFolder));
-
+    if fixationOnset
+        EEG = pop_editset(EEG, 'setname', sprintf('2a_cleanDataChannelsFixation_%s',participants(sub).name(1:end-4)));
+        EEG = pop_saveset(EEG, 'filename',sprintf('2a_cleanDataChannelsFixation_%s',participants(sub).name(1:end-4)),'filepath',fullfile(participantFolder));
+    else
+        EEG = pop_editset(EEG, 'setname', sprintf('2a_cleanDataChannelsSaccade_%s',participants(sub).name(1:end-4)));
+        EEG = pop_saveset(EEG, 'filename',sprintf('2a_cleanDataChannelsSaccade_%s',participants(sub).name(1:end-4)),'filepath',fullfile(participantFolder));
+    end
     % save the data without the time interval rejection (for Unfold)
     BUR = eeg_checkset(BUR);
-    BUR = pop_editset(BUR, 'setname', sprintf('2a_cleanDataChannels_noRejection_%s',participants(sub).name(1:end-4))); 
-    BUR = pop_saveset(BUR, 'filename',sprintf('2a_cleanDataChannels_noRejection_%s',participants(sub).name(1:end-4)),'filepath',fullfile(participantFolder));
+    if fixationOnset
+        BUR = pop_editset(BUR, 'setname', sprintf('2a_cleanDataChannels_noRejectionFixation_%s',participants(sub).name(1:end-4)));
+        BUR = pop_saveset(BUR, 'filename',sprintf('2a_cleanDataChannels_noRejectionFixation_%s',participants(sub).name(1:end-4)),'filepath',fullfile(participantFolder));
+    else
+        BUR = pop_editset(BUR, 'setname', sprintf('2a_cleanDataChannels_noRejectionSaccade_%s',participants(sub).name(1:end-4)));
+        BUR = pop_saveset(BUR, 'filename',sprintf('2a_cleanDataChannels_noRejectionSaccade_%s',participants(sub).name(1:end-4)),'filepath',fullfile(participantFolder));
+    end
     %% ICA - WE ARE SKIPPING THIS BECAUSE IT IS NOT AFFECTING THE DATA - CHECK FOR LATER
     % EEG = pop_loadset(sprintf('2a_cleanDataChannels_%s.set',participants(sub).name(1:end-4)),fullfile(participantFolder));
     % 
@@ -224,9 +261,15 @@ for sub = 1:length(participants)
     % EEGOUT = eeg_checkset(EEGOUT);
     % EEGOUT = pop_saveset(EEGOUT, 'filename',sprintf('4a_ICA_%s',participants(sub).name(1:end-4))),'filepath',fullfile(participantFolder));
     %% Step 5: Interpolating missing channels
-    EEG = pop_loadset(sprintf('2a_cleanDataChannels_%s.set',participants(sub).name(1:end-4)),fullfile(participantFolder));
-    % Get all channels that need to be interpolated
-    EEGchan = pop_loadset(sprintf('1a_triggersFiltered_%s.set',participants(sub).name(1:end-4)),fullfile(participantFolder)); 
+    if fixationOnset
+        EEG = pop_loadset(sprintf('2a_cleanDataChannelsFixation_%s.set',participants(sub).name(1:end-4)),fullfile(participantFolder));
+        % Get all channels that need to be interpolated
+        EEGchan = pop_loadset(sprintf('1a_triggersFilteredFixation_%s.set',participants(sub).name(1:end-4)),fullfile(participantFolder));
+    else
+        EEG = pop_loadset(sprintf('2a_cleanDataChannelsSaccade_%s.set',participants(sub).name(1:end-4)),fullfile(participantFolder));
+        % Get all channels that need to be interpolated
+        EEGchan = pop_loadset(sprintf('1a_triggersFilteredSaccade_%s.set',participants(sub).name(1:end-4)),fullfile(participantFolder));
+    end
     fullChanlocs = EEGchan.chanlocs; % Used for data cleaning and interpolation
     clear EEGchan
     EEG = pop_interp(EEG,fullChanlocs,'spherical');
@@ -239,5 +282,9 @@ for sub = 1:length(participants)
     end
     % Save the results
     EEG = eeg_checkset(EEG);
-    EEG = pop_saveset(EEG, 'filename',sprintf('5a_interpolation_%s',participants(sub).name(1:end-4)),'filepath',fullfile(participantFolder));
+    if fixationOnset
+        EEG = pop_saveset(EEG, 'filename',sprintf('5a_interpolationFixation_%s',participants(sub).name(1:end-4)),'filepath',fullfile(participantFolder));
+    else
+        EEG = pop_saveset(EEG, 'filename',sprintf('5a_interpolationSaccade_%s',participants(sub).name(1:end-4)),'filepath',fullfile(participantFolder));
+    end
 end
