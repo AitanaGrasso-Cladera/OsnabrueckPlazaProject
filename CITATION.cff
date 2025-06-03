@@ -7,7 +7,7 @@ authors:
 - family-names: "Nolte"
   given-names: "Debora"
   orcid: "https://orcid.org/0009-0007-0246-4481"
-family-names: "Akkaya"
+- family-names: "Akkaya"
   given-names: "Aziz"
 title: "Exploring Saccade and Fixation Onset ERPs in the Real World"
 version: 1.0
