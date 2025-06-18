@@ -20,7 +20,7 @@ pd.set_option('display.precision', 15)
 
 
 # Define directories (delete the path)
-workingFolder = Path('/Users/azizakkaya/Library/CloudStorage/GoogleDrive-aziz.muhammed64@gmail.com/My Drive/ERASMUS-Osnabruck/lab_files/plaza_project/Plaza_Project-main/finding_external_triggers')
+workingFolder = Path('')
 dataFolder = Path(workingFolder, 'Data')
 triggerFolder = Path(workingFolder, 'triggerFiles')
 eventFolder = Path(workingFolder, 'eventFiles')
