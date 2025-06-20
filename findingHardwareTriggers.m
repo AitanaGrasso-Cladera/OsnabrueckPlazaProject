@@ -144,9 +144,3 @@ for sub = 1:length(participants)
     EEG = pop_saveset(EEG, 'filename', [participants(sub).name(1:end-4), '_with_events'],'filepath',fullfile(participantFolder));
 end
 
-%% some tests
-fileName = 'Participant12_1_with_events.set';
-filePath = ['/Users/azizakkaya/Library/CloudStorage/GoogleDrive-aziz.muhammed64@gmail.com/' ...
-    'My Drive/ERASMUS-Osnabruck/lab_files/plaza_project/Plaza_Project-main/finding_external_triggers/Data/preproc_Participant12_1'];
-EEG = pop_loadset('filename', fileName, 'filepath', filePath);
-pop_eegplot(EEG, 1, 1, 1);
