@@ -1,5 +1,5 @@
 # Osnabrück Plaza Project
-Codes used for the Osnabrück Plaza Project developed by Aitana Grasso-Cladera, MSc. and Debora Nolte, MSc. (Neurobiopsychology Laboratory at the Institute of Cognitive Sciences; Osnabrück University). This project is supervised by Prof. Dr. Peter König and Prof. Dr. Tim Kietzmann.
+Codes used for the Osnabrück Plaza Project developed by Aitana Grasso-Cladera, MSc. and Debora Nolte, MSc. (Neurobiopsychology Laboratory at the Institute of Cognitive Sciences; Osnabrück University), with the collaboration of Aziz Muhammed Akkaya and Alina Zaidan. This project is supervised by Prof. Dr. Peter König and Prof. Dr. Tim Kietzmann.
 
 **alignmentAndTriggerFile.m**
 This script performs the aligment of EEG and eye-tracking data streams, accounting for any potential drifts in the software synchronization level.
