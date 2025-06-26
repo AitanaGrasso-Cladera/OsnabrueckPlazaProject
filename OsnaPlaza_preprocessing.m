@@ -28,17 +28,17 @@ desktop = 0;
 laptop = 1;
 
 if desktop == 1
-    dataFolder = '/media/agrassoclade/Aitanas_SSD/Osnabruck_Plaza/Data';
-    triggerFolder = '/media/agrassoclade/Aitanas_SSD/Osnabruck_Plaza/triggerFiles';
+    dataFolder = [];
+    triggerFolder = [];
     hardwareFolder = [];
-    addpath('/media/agrassoclade/Aitanas_SSD/Matlab_Toolboxes/eeglab2025.0.0');
-    workingFolder = '/media/agrassoclade/Aitanas_SSD/Osnabruck_Plaza';
+    addpath([]);
+    workingFolder = [];
 elseif laptop == 1
-    dataFolder = '/Volumes/Aitanas_SSD/Osnabruck_Plaza/Data';
-    triggerFolder = '/Volumes/Aitanas_SSD/Osnabruck_Plaza/triggerFiles';
-    hardwareFolder = '/Volumes/Aitanas_SSD/Osnabruck_Plaza/hardwareTriggerFile';
-    addpath('/Volumes/Aitanas_SSD/Matlab_Toolboxes/eeglab2025.0.0');
-    workingFolder = '/Volumes/Aitanas_SSD/Osnabruck_Plaza';
+    dataFolder = [];
+    triggerFolder = [];
+    hardwareFolder = [];
+    addpath([]);
+    workingFolder = [];
 end
 %%
 tmp = dir(fullfile(dataFolder));
@@ -59,7 +59,7 @@ end
 clear tmp
 %%
 eeglab
-for sub = 1:8%length(participants)
+for sub = 1:length(participants)
     participantFolder = [dataFolder,filesep,'preproc_',participants(sub).name(1:end-4)];
 
     if ~exist(participantFolder,'dir')
