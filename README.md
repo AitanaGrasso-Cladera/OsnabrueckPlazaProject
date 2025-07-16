@@ -4,8 +4,14 @@ Codes used for the Osnabrück Plaza Project developed by Aitana Grasso-Cladera, 
 **alignmentAndTriggerFile.m**
 This script performs the aligment of EEG and eye-tracking data streams, accounting for any potential drifts in the software synchronization level.
 Also, it creates the trigger file based on the results of the Face Mapper Algorithm (Pupil Lab), in order to generate a usable trigger file for EEG preprocessing and analyses.
-To run this script you need the XDF file with the data streams, and different files coming from the eye-tracking data (accesible through Pupil Cloud)
-The output of this script is needed in order to run OsnaPlaza_preprocessing.
+To run this script you need the XDF file with the data streams, and different files coming from the eye-tracking data (accesible through Pupil Cloud).
+The output of this script is needed in order to run OsnaPlaza_preprocessing and position event markers.
+
+**findingHardwareTriggers.m**
+This script allows the identification of the artifact triggers generated in the EEG signal, by using temporal information from the artifacts on the eye-tracking video.
+After identifying the artifacts, it generates a trigger file with the events corresponding to the different rounds of hardware trigger during the experimental session.
+To run this script you need the XDF file with the data streams, and the event file coming from the eye-tracking data (accesible through Pupil Cloud).
+The output of this script is needed in order to run OsnaPlaza_preprocessing and clean the data.
 
 **OsnaPlaza_preprocessing.m**
 This script presents the preprocessing of the EEG data following the customized pipeline for the present project.
