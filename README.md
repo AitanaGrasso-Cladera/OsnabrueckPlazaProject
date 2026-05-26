@@ -16,3 +16,10 @@ The output of this script is needed in order to run OsnaPlaza_preprocessing and 
 **OsnaPlaza_preprocessing.m**
 This script presents the preprocessing of the EEG data following the customized pipeline for the present project.
 To run this script, you need the output from aligmentAndTriggerFile, the hardware trigger file, as well as the XDF file and the channel location file for the EEG system.
+
+The rest of the scripts should be used in the following order:
+1. Unfold scripts.
+2. Average sessions.
+3. Cosine similarity.
+4. Epoch no unfold.
+5. Plots.
