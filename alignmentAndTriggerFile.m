@@ -4,20 +4,26 @@
 % 20.03.25 - AGC = Automatization of the script to run over multiple
 % subjects. At the moment, only creates the trigger file for
 % fixation onset ERPs.
-% 02.04.25 - AGC = Automatizated script computes the trigger file for
+% 02.04.25 - AGC = Automatizated script computes the tnotrigger file for
 % saccade onset for multiple subjects. 
 % 08.04.25 - AGC - DN = We checked how the durations and latencies were
 % assigned, and modified the script to be more accurate.
 % 03.06.25 - DN - AGC = We checked saccade vs fixation onset time limits
 % for trigger file.
-%% To do
+% 30.01.26 - AGC = Added amplitude to the saccade information. Removed Face 
+% and Background elements.
+% 14.04.26 - AGC = Included blinks as part of the trigger file creation and
+% did small changes for the normalization of the timelines.
 %% Path definition
-EEGdataFolder = [];
-fixationFolder = [];
-saccadeFolder = [];
-ETeventsFolder = [];
-triggerFolder = [];
-addpath([]');
+projectFolder = [];
+EEGdataFolder = [projectFolder,filesep,'Data'];
+fixationFolder = [projectFolder,filesep,'fixationFiles'];
+saccadeFolder = [projectFolder,filesep,'saccadeFiles'];
+blinkFolder = [projectFolder,filesep,'blinkFiles'];
+ETeventsFolder = [projectFolder,filesep,'pupilLabEvents'];
+triggerFolder = [projectFolder,filesep,'triggerFiles'];
+
+addpath(genpath('[]/eeglab2026.0.0'));
 %% Get information about participant's files
 tmp = dir(fullfile(EEGdataFolder));
 participants = [];
@@ -36,8 +42,10 @@ end
 clear tmp
 %%
 eeglab
+close
+%%
 for sub = 1:length(participants)
-    %% Create participant folder
+    % Create participant folder
     participantFolder = [EEGdataFolder,filesep,'preproc_',participants(sub).name(1:end-4)];
 
     if ~exist(participantFolder,'dir')
@@ -81,7 +89,7 @@ for sub = 1:length(participants)
         numericPart = regexp(startEEG, '\d+(\.\d+)?', 'match');
         startEEG = str2double(numericPart{1});
         startMatch = floor(startRestaPI) == floor(startEEG);
-        %% Get the ET events between start and end of EEG recording
+        % Get the ET events between start and end of EEG recording
         ETtimes = eventsPL.timestamp_ns_(EEGstartMessage:EEGendMessage);
     else
         EEGstartMessage = EEGstartMessage-1;
@@ -93,7 +101,7 @@ for sub = 1:length(participants)
         numericPart = regexp(startEEG, '\d+(\.\d+)?', 'match');
         startEEG = str2double(numericPart{1});
         startMatch = floor(startRestaPI) == floor(startEEG);
-        %% Get the ET events between start and end of EEG recording
+        % Get the ET events between start and end of EEG recording
         ETtimes = eventsPL.timestamp_ns_(EEGstartMessage:EEGendMessage);
     end
     % Set ET timestamps to seconds
@@ -120,31 +128,29 @@ for sub = 1:length(participants)
     fitted_values = polyval(p,1:length(residualsTimeline));
     %% Compute the linear drift of the fitted line
     linearDrift = fitted_values(end)-fitted_values(1);
+    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Create the trigger file (based on fixations)
     % Load fixation on faces/background (Face Detection Alg)
-    fixEvents = readtable([fixationFolder,filesep,'fixations_on_face_',participants(sub).name(end-7:end-4)]);
-    % Cut the fixation data between EEG start and end
+    fixEvents = readtable([fixationFolder,filesep,'finalFixations',filesep,'fixations_',participants(sub).name(end-7:end-4)]);
+   % Cut the fixation data between EEG start and end
     lowerLimitETfix = min(find(fixEvents.startTimestamp_ns_ >= eventsPL.timestamp_ns_(EEGstartMessage)));
     upperLimitETfix = max(find(fixEvents.startTimestamp_ns_ <= eventsPL.timestamp_ns_(EEGendMessage)));
+    targetLower = fixEvents.startTimestamp_ns_(lowerLimitETfix);
+    targetUpper = fixEvents.startTimestamp_ns_(upperLimitETfix);
     fixEvents = fixEvents(lowerLimitETfix:upperLimitETfix,:);
-    % Set ET timestamps from fixations to seconds
+   % Set ET timestamps from fixations to seconds
     fixEventsStart = fixEvents.startTimestamp_ns_/1e9;
-    % Set the first timestamp to zero
+   % Set the first timestamp to zero
     fixEventsTime = fixEventsStart - firstETtimes(1);
-    % Round for precision
+   % Round for precision
     fixationTimes = round(fixEventsTime,3);
     %% Create the trigger file (based on saccades)
     % Load the saccade file from Pupil Cloud
-    saccEvents = readtable([saccadeFolder,filesep,'saccades_',participants(sub).name(end-7:end-4)]);
+    saccEvents = readtable([saccadeFolder,filesep,'newSaccades',filesep,'saccades_',participants(sub).name(end-7:end-4)]);
     % Cut the saccade data between EEG start and end
-    % lowerLimitETsacc = min(find(saccEvents.startTimestamp_ns_ >= eventsPL.timestamp_ns_(EEGstartMessage)));
-    % upperLimitETsacc = max(find(saccEvents.startTimestamp_ns_ <= eventsPL.timestamp_ns_(EEGendMessage)));
-    % To make them uniform, we only use fixation limits.
-    if upperLimitETfix > height(saccEvents)
-        saccEvents = saccEvents(lowerLimitETfix:end,:);
-    else
-        saccEvents = saccEvents(lowerLimitETfix:upperLimitETfix,:);
-    end
+    lowerLimitETsacc = find(saccEvents.startTimestamp_ns_ >= targetLower, 1, 'first');
+    upperLimitETsacc = find(saccEvents.startTimestamp_ns_ <= targetUpper, 1, 'last');
+    saccEvents = saccEvents(lowerLimitETsacc:upperLimitETsacc,:);
     % Set ET timestamps from saccades to seconds
     saccEventsStart = saccEvents.startTimestamp_ns_/1e9;
     % Set the first timestamp to zero
@@ -190,54 +196,43 @@ for sub = 1:length(participants)
     newSaccadesTime = timeline(actualSaccades);
     % Now we add the first EEG timestamps, to get the data in EEG latencies
     finalSaccadesTime = (newSaccadesTime*500)+1;
-    %% Get the labels for the fixations
-    fixationLabel = cell(size(finalSaccadesTime));
-    for i = 1:length(fixEvents.startTimestamp_ns_)
-        if contains(fixEvents.fixationOnFace(i),'true')
-            fixationLabel(1,i) = {'face'};
-        else
-            fixationLabel(1,i) = {'background'};
-        end
-    end
+    %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% Organize trigger files
     nRows = length(finalFixationsTime);  % number of rows
     % Preallocate each column
     saccEventsCutted = table(nan(nRows,1),nan(nRows,1),strings(nRows,1), nan(nRows,1), ...              % givenDuration
-        'VariableNames', {'saccadeStart','latency','type','givenDuration'});
-    fixEventsCutted = table(nan(nRows,1),strings(nRows,1),nan(nRows,1), ...
-        'VariableNames', {'latency','type','givenDuration'});
+        'VariableNames', {'start','latency','type','givenDuration'});
+    fixEventsCutted = table(nan(nRows,1),nan(nRows,1),strings(nRows,1),nan(nRows,1), ...
+        'VariableNames', {'start','latency','type','givenDuration'});
 
-    for i = 1:length(finalFixationsTime)
-        % Find the indices of saccadeTimes that are smaller than the current fixation time
+    for i = 1:nRows
+        fixEventsCutted.start(i) = newFixationsTime(i);
+        fixEventsCutted.latency(i) = finalFixationsTime(i);
+        fixEventsCutted.type(i) = fixEvents.type(i);
+        fixEventsCutted.givenDuration(i) = fixEvents.duration_ms_(i);
+
         validIndices = find(newSaccadesTime < newFixationsTime(i));
-        % If there is at least one valid saccade time, find the closest one
+
         if ~isempty(validIndices)
-            % Get the closest smaller saccade time by taking the max valid index
-            [~, minIdx] = min(newFixationsTime(i) - newSaccadesTime(validIndices));
-            closestIndex = validIndices(minIdx);
-            % Asign and save the relevant data
-            saccEventsCutted.saccadeStart(i) = newSaccadesTime(closestIndex);
+            [~, idx] = min(newFixationsTime(i) - newSaccadesTime(validIndices));
+            closestIndex = validIndices(idx);
+
+            saccEventsCutted.start(i) = newSaccadesTime(closestIndex);
             saccEventsCutted.latency(i) = finalSaccadesTime(closestIndex);
-            saccEventsCutted.type(i) = fixationLabel(1,closestIndex);
+            saccEventsCutted.type(i) = saccEvents.type(closestIndex);
             saccEventsCutted.givenDuration(i) = saccEvents.duration_ms_(closestIndex);
-            fixEventsCutted.givenDuration(i) = saccEvents.duration_ms_(closestIndex);
-            fixEventsCutted.latency(i) = finalFixationsTime(closestIndex);
-            fixEventsCutted.fixationStart(i) = newFixationsTime(closestIndex);
-            fixEventsCutted.type(i) = fixationLabel(1,closestIndex);
+
         else
-            saccEventsCutted.saccadeStart(i) = NaN; 
-            saccEventsCutted.type(i) = NaN;
+            saccEventsCutted.start(i) = NaN;
             saccEventsCutted.latency(i) = NaN;
+            saccEventsCutted.type(i) = "";
             saccEventsCutted.givenDuration(i) = NaN;
-            fixEventsCutted.givenDuration(i) = NaN;
-            fixEventsCutted.latency(i) = NaN;
-            fixEventsCutted.fixationStart(i) = NaN;
-            fixEventsCutted.type(i) = NaN;
         end
     end
+    eventDiff = length(newSaccadesTime) - length(newFixationsTime);
     %% Save trigger file
     writetable(fixEventsCutted,[triggerFolder,filesep,'rawTriggerFileFixations_Participant',participants(sub).name(end-7:end-4),'.csv']);
-    save([EEGdataFolder,filesep,'preproc_',participants(sub).name(1:end-4),filesep,'alignmentMetadata',participants(sub).name(1:end-4),'.mat'],'differenceNumberMessages','residualsTimeline','linearDrift','intercept')
+    save([EEGdataFolder,filesep,'preproc_',participants(sub).name(1:end-4),filesep,'alignmentMetadata',participants(sub).name(1:end-4),'.mat'],'differenceNumberMessages','residualsTimeline','linearDrift','intercept','eventDiff')
 
     writetable(saccEventsCutted,[triggerFolder,filesep,'rawTriggerFileSaccades_Participant',participants(sub).name(end-7:end-4),'.csv']);
 end
