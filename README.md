@@ -20,8 +20,8 @@ This script presents the preprocessing of the EEG data following the customized 
 To run this script, you need the output from aligmentAndTriggerFile, the hardware trigger file, as well as the XDF file and the channel location file for the EEG system.
 
 The rest of the scripts should be used in the following order:
-* 1. _Saccade and Blink Dynamics During Free Exploration_ section and plot _Figure 3_
-- a. figure3_SaccBlinkDurations.m
+1. **_Saccade and Blink Dynamics During Free Exploration_ section and plot _Figure 3_**
+  -`figure3_SaccBlinkDurations.m`
 2. _Contrasting Saccade- and Blink-Offset ERPs_ section and plot _Figure 4_
   a. epochNoUnfold.m
   b. ERPimageSortedBlinkDur.m
