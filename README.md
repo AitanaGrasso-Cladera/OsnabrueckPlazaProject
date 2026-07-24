@@ -21,20 +21,21 @@ To run this script, you need the output from aligmentAndTriggerFile, the hardwar
 
 The rest of the scripts should be used in the following order:
 1. **_Saccade and Blink Dynamics During Free Exploration_** (Figure 3)
-   - `figure3_SaccBlinkDurations.m`
+   a. `figure3_SaccBlinkDurations.m`
+
 2. **_Contrasting Saccade- and Blink-Offset ERPs_** (Figure 4)
-   - `epochNoUnfold.m`
-   - `ERPimageSortedBlinkDur.m`
-   - `ERPimageSortedSaccDur.m`
-   - `ERPs_Unfold_OSPlaza.m`
-   - `ERPs_Unfold_OSPlaza_TF.m`
-   - `figure4_SaccBlinkSorted.m`
+   a. `epochNoUnfold.m`
+   b. `ERPimageSortedBlinkDur.m`
+   c. `ERPimageSortedSaccDur.m`
+   d. `ERPs_Unfold_OSPlaza.m`
+   e. `ERPs_Unfold_OSPlaza_TF.m`
+   f. `figure4_SaccBlinkSorted.m`
 
 3. **_Comparing Saccade- and Blink-Locked ERPs_** (Figure 5)
-   - `averageSessions.m`
-   - `rootToMeanRatio.m`
-   - `figure5_6_A_Activity.m` *(requires `compute_CI.m`)*
-   - `figure5_6_BandC_CosineSimilarityMatrix.m`
-   - `figure5_6_D_TheoreticalMatrix.m`
-   - `theoreticalTemplateCorrelation.m` *(also generates Panel E of Figures 5 and 6)*
-   - `sign_flippedCorrelation.m`
+   a. `averageSessions.m`
+   b. `rootToMeanRatio.m`
+   c. `figure5_6_A_Activity.m` *(requires `compute_CI.m`)*
+   d. `figure5_6_BandC_CosineSimilarityMatrix.m`
+   e. `figure5_6_D_TheoreticalMatrix.m`
+   f. `theoreticalTemplateCorrelation.m` *(also generates Panel E of Figures 5 and 6)*
+   g. `sign_flippedCorrelation.m`
