@@ -20,8 +20,20 @@ This script presents the preprocessing of the EEG data following the customized 
 To run this script, you need the output from aligmentAndTriggerFile, the hardware trigger file, as well as the XDF file and the channel location file for the EEG system.
 
 The rest of the scripts should be used in the following order:
-1. Unfold scripts.
-2. Average sessions.
-3. Cosine similarity.
-4. Epoch no unfold.
-5. Plots.
+1. _Saccade and Blink Dynamics During Free Exploration_ section and plot _Figure 3_
+   a. figure3_SaccBlinkDurations.m
+2. _Contrasting Saccade- and Blink-Offset ERPs_ section and plot _Figure 4_
+  a. epochNoUnfold.m
+  b. ERPimageSortedBlinkDur.m
+  c. ERPimageSorderSaccDur.m
+  d. ERPs_Unfold_OSPlaza.m
+  e. ERPs_Unfold_OSPlaza_TF.m
+  f. figure4_SaccBlinkSorted.m
+3. _Comparing Saccade- and Blink-Locked ERPs_ section and plot _Figure 5_
+  a. averageSessions.m
+  b. rootToMeanRatio.m.
+  c. figure5_6_A_Activity.m (requires the function compute_CI.m)
+  d. figure5_6_BandC_CosineSimilarityMatrix.m
+  e. figure5_6_D_TheoreticalMatrix.m
+  f. theoreticalTemplateCorrelation.m (this script also generates Panel E of Figures 5 and 6).
+  g. sign_flippedCorrelation.m
