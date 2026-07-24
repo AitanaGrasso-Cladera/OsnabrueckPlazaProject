@@ -21,7 +21,7 @@ To run this script, you need the output from aligmentAndTriggerFile, the hardwar
 
 The rest of the scripts should be used in the following order:
 1. _Saccade and Blink Dynamics During Free Exploration_ section and plot _Figure 3_
-   a. figure3_SaccBlinkDurations.m
+- a. figure3_SaccBlinkDurations.m
 2. _Contrasting Saccade- and Blink-Offset ERPs_ section and plot _Figure 4_
   a. epochNoUnfold.m
   b. ERPimageSortedBlinkDur.m
