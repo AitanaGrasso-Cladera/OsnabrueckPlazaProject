@@ -29,7 +29,7 @@ The rest of the scripts should be used in the following order:
    - `ERPs_Unfold_OSPlaza.m`
    - `ERPs_Unfold_OSPlaza_TF.m`
    - `figure4_SaccBlinkSorted.m`
-3. **_Comparing Saccade- and Blink-Locked ERPs_** (Figure 5)
+3. **_Comparing Saccade- and Blink-Locked ERPs/TFR_** (Figures 5 and 6)
    - `averageSessions.m`
    - `rootToMeanRatio.m`
    - `figure5_6_A_Activity.m` *(requires `compute_CI.m`)*
